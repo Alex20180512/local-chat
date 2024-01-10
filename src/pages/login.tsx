@@ -1,4 +1,3 @@
-// pages/login.tsx
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 
@@ -8,8 +7,6 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    // 发送请求到登录 API
     const response = await fetch('/api/login', {
       method: 'POST',
       headers: {
@@ -17,28 +14,25 @@ const LoginPage: React.FC = () => {
       },
       body: JSON.stringify({ username }),
     });
-
     if (response.ok) {
-      // 登录成功后重定向到首页
       router.push('/');
     } else {
-      // 处理错误情况（例如显示错误消息）
       console.error('Failed to log in');
     }
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
+    <div className='fixed left-0 top-0 w-full h-full flex flex-col justify-center items-center'>
+      <form onSubmit={handleSubmit} className='flex flex-col'>
         <input
+          className='border shadow-lg rounded-lg mr-4 p-2 outline-none w-full mb-4'
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter Username"
+          placeholder="随便输入用户名登录"
           required
         />
-        <button type="submit">Login</button>
+        <button className='shadow-lg p-2 border rounded-lg w-full bg-blue-400 text-white' type="submit">登录</button>
       </form>
     </div>
   );

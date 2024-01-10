@@ -1,7 +1,8 @@
 import { GetServerSideProps } from 'next';
 import { parseCookies } from 'nookies';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { MouseEventHandler, useEffect, useMemo, useState } from 'react';
+import ClipboardJS from 'clipboard';
 
 export default function HomePage({ username }: { username: string }) {
   const router = useRouter();
@@ -16,10 +17,8 @@ export default function HomePage({ username }: { username: string }) {
     });
 
     if (response.ok) {
-      // 登出成功后重定向到登录页面
       router.push('/login');
     } else {
-      // 处理错误情况
       console.error('Failed to log out');
     }
   };
@@ -57,17 +56,37 @@ export default function HomePage({ username }: { username: string }) {
       }
     }
 
-    const interval = setInterval(action, 1000);
+    const interval = setInterval(action, 500);
+
+    new ClipboardJS('.btn');
+
     return () => clearInterval(interval);
   }, []);
 
+  const filteredMessages = useMemo(() => {
+    if (to.trim() === '') {
+      return []
+    } else {
+      return messages.filter(item => item.to === username);
+    }
+  }, [to, messages]);
+
+  const onClick: MouseEventHandler = (e) => {
+    const button = e.target as HTMLButtonElement;
+    const old = button.textContent;
+    button.textContent = '复制成功';
+    setTimeout(() => {
+      button.textContent = old;
+    }, 1500);
+  }
+
   return (
-    <div>
-      <h1>Welcome {username}</h1>
-      <button onClick={handleLogout}>Logout</button>
+    <div className='flex flex-col items-center pb-[200px]'>
+      <h1 className='text-[30px] font-bold m-2'>Welcome {username}</h1>
+      <button onClick={handleLogout} className='bg-red-500 text-white rounded-md px-2 py-1 text-[12px] self-end mr-4'>退出登录</button>
       <br />
       <label>
-        send message to: <select value={to} onChange={e => {
+        选择聊天用户: <select value={to} onChange={e => {
           setTo(e.target.value);
         }}>
           <option value=''> --请选择-- </option>
@@ -76,23 +95,23 @@ export default function HomePage({ username }: { username: string }) {
           ))}
         </select>
       </label>
-      <br />
-      <label>内容：
-        <textarea className='border' value={content} onChange={e => setContent(e.target.value)}></textarea>
-      </label>
-      <br />
-      <button onClick={handleSend}>发送</button>
       <ul>
         {
-          messages.map(item => {
-            return <li>
-              <div>From: {item.from}</div>
-              <div>To: {item.to}</div>
-              <div>{item.content}</div>
+          filteredMessages.map((item, index) => {
+            return <li key={index} className='w-full mt-8'>
+              <div className="max-w-[400px] p-4 border shadow-md rounded-lg flex flex-col">
+                <h2 className="text-xl font-bold">来自: {item.from} 的消息</h2>
+                <p className="text-gray-600 py-4 my-2 max-h-[100px] overflow-auto">{item.content}</p>
+                <button className="btn bg-blue-500 text-white rounded px-2 py-1 text-sm" data-clipboard-text={item.content} onClick={onClick}>复制</button>
+              </div>
             </li>
           })
         }
       </ul>
+      <div className='fixed left-0 bottom-0 w-full h-[100px] box-border p-4 flex'>
+        <textarea className='flex-1 border mr-2 resize-none shadow-lg rounded-md outline-none p-2' value={content} onChange={e => setContent(e.target.value)}></textarea>
+        <button className='shadow-lg p-2 border rounded-lg w-[100px] bg-blue-400 text-white' onClick={handleSend}>发送</button>
+      </div>
     </div>
   );
 }
